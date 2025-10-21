@@ -29,8 +29,8 @@ fn thread_rng() -> SmallRng {
 }
 
 fn get(rng: &mut impl Rng) -> (ErrorKind, &'static str, String) {
-    let route = rng.gen_range(0..routes().len());
-    let error = rng.gen_range(0..errors().len());
+    let route = rng.random_range(0..routes().len());
+    let error = rng.random_range(0..errors().len());
     let name = Name(EN).fake_with_rng::<String, _>(rng);
     (errors()[error], routes()[route], name)
 }

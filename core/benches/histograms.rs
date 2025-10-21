@@ -169,9 +169,9 @@ mod fixed_cardinality {
     }
 
     fn get(rng: &mut impl Rng) -> (ErrorKind, &'static str, f64) {
-        let route = rng.gen_range(0..routes().len());
-        let error = rng.gen_range(0..errors().len());
-        (errors()[error], routes()[route], rng.r#gen())
+        let route = rng.random_range(0..routes().len());
+        let error = rng.random_range(0..errors().len());
+        (errors()[error], routes()[route], rng.random())
     }
 
     fn routes() -> &'static [&'static str] {

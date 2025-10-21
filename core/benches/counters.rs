@@ -141,8 +141,8 @@ fn thread_rng() -> SmallRng {
 }
 
 fn get(rng: &mut impl Rng) -> (ErrorKind, &'static str) {
-    let route = rng.gen_range(0..routes().len());
-    let error = rng.gen_range(0..errors().len());
+    let route = rng.random_range(0..routes().len());
+    let error = rng.random_range(0..errors().len());
     (errors()[error], routes()[route])
 }
 
