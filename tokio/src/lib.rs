@@ -329,12 +329,20 @@ where
         }
     );
 
-    #[cfg(tokio_unstable)]
     metric!(
         "worker_park_total",
         "number of times the given worker thread has parked",
         |rt| for worker in 0..rt.num_workers() {
             let count = rt.worker_park_count(worker);
+            write_counter!(Worker(worker), count);
+        }
+    );
+
+    metric!(
+        "workers_park_unpark_total",
+        "number of times the given worker thread has parked and unparked",
+        |rt| for worker in 0..rt.num_workers() {
+            let count = rt.worker_park_unpark_count(worker);
             write_counter!(Worker(worker), count);
         }
     );
@@ -359,25 +367,31 @@ where
         }
     );
 
-    #[cfg(tokio_unstable)]
     metric!(
         "worker_poll_time_seconds",
         "time this runtime thread has spent polling tasks",
         |rt| for worker in 0..rt.num_workers() {
-            use measured::metric::name::{Bucket, Count, Sum};
+            use measured::metric::name::Sum;
 
             let worker_label = Worker(worker);
-            if rt.poll_time_histogram_enabled() {
-                let buckets = rt.poll_time_histogram_num_buckets();
-                let mut total = 0;
-                for bucket in 0..buckets {
-                    let le = histogram_le(rt, bucket);
-                    total += rt.poll_time_histogram_bucket_count(worker, bucket);
-                    write_counter!(Bucket, worker_label.compose_with(le), total);
+
+            #[cfg(tokio_unstable)]
+            {
+                use measured::metric::name::{Bucket, Count};
+                if rt.poll_time_histogram_enabled() {
+                    let buckets = rt.poll_time_histogram_num_buckets();
+                    let mut total = 0;
+                    for bucket in 0..buckets {
+                        let le = histogram_le(rt, bucket);
+                        total += rt.poll_time_histogram_bucket_count(worker, bucket);
+                        write_counter!(Bucket, worker_label.compose_with(le), total);
+                    }
                 }
+
+                let count = rt.worker_poll_count(worker);
+                write_counter!(Count, worker_label, count);
             }
-            let count = rt.worker_poll_count(worker);
-            write_counter!(Count, worker_label, count);
+
             let busy = rt.worker_total_busy_duration(worker);
             write_float_gauge!(Sum, worker_label, busy.as_secs_f64());
         }
@@ -417,10 +431,8 @@ where
     }
 }
 
-#[cfg(tokio_unstable)]
 struct I64(i64);
 
-#[cfg(tokio_unstable)]
 impl LabelValue for I64 {
     fn visit<V: LabelVisitor>(&self, v: V) -> V::Output {
         v.write_int(self.0)
@@ -437,11 +449,9 @@ impl LabelValue for F64 {
     }
 }
 
-#[cfg(tokio_unstable)]
 #[derive(Copy, Clone)]
 struct Worker(usize);
 
-#[cfg(tokio_unstable)]
 impl LabelGroup for Worker {
     fn visit_values(&self, v: &mut impl LabelGroupVisitor) {
         const LE: &LabelName = LabelName::from_str("worker");
