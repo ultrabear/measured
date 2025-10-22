@@ -656,7 +656,7 @@ checksum = "0e7465ac9959cc2b1404e8e2367b43684a6d13790fe23056cc8c6c5a6b7bcb94"
 
 [[package]]
 name = "measured"
-version = "0.0.23"
+version = "0.0.24"
 dependencies = [
  "ahash",
  "bytes",
@@ -684,7 +684,7 @@ dependencies = [
 
 [[package]]
 name = "measured-derive"
-version = "0.0.23"
+version = "0.0.24"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -694,7 +694,7 @@ dependencies = [
 
 [[package]]
 name = "measured-process"
-version = "0.0.23"
+version = "0.0.24"
 dependencies = [
  "libc",
  "measured",
@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "measured-prometheus-protobuf"
-version = "0.0.23"
+version = "0.0.24"
 dependencies = [
  "ahash",
  "bytes",
@@ -722,7 +722,7 @@ dependencies = [
 
 [[package]]
 name = "measured-tokio"
-version = "0.0.23"
+version = "0.0.24"
 dependencies = [
  "itoa",
  "measured",
