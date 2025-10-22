@@ -21,15 +21,19 @@ impl ToTokens for FixedCardinalityLabel {
 
         let visits = variants.iter().map(|var| {
             let var_ident = &var.ident;
-            let write = if let Some(int) = &var.value {
-                quote_spanned!(int.span() => v.write_int(#int))
-            } else {
-                let name = var.attrs.rename.as_ref().map_or_else(
-                    || rename_all.apply(&var.ident.to_string()),
-                    syn::LitStr::value,
-                );
-                quote_spanned!(var.span => v.write_str(#name))
-            };
+
+            let write = var.attrs.rename.as_ref().map_or_else(
+                || {
+                    if let Some(int) = &var.value {
+                        quote_spanned!(int.span() => v.write_int(#int))
+                    } else {
+                        let name = rename_all.apply(&var.ident.to_string());
+                        quote_spanned!(var.span => v.write_str(#name))
+                    }
+                },
+                |r| quote_spanned!(var.span => v.write_str(#r)),
+            );
+
             quote_spanned!(var.span => #ident :: #var_ident => #write,)
         });
 

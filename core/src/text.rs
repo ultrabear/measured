@@ -571,4 +571,60 @@ http_request_duration_seconds_count 4
 "#
         );
     }
+
+    /// See <https://github.com/conradludgate/measured/issues/8>
+    #[test]
+    fn text_encoding_rename() {
+        #[derive(Clone, Copy, PartialEq, Debug, measured_derive::LabelGroup)]
+        #[label(crate = crate, set = RequestLabelSet)]
+        struct RequestLabels {
+            method: Method,
+            code: StatusCode,
+        }
+
+        #[derive(Clone, Copy, PartialEq, Debug, measured_derive::FixedCardinalityLabel)]
+        #[label(crate = crate)]
+        enum StatusCode {
+            #[label(rename = "ok")]
+            Ok = 200,
+
+            #[label(rename = "badrequest")]
+            BadRequest = 400,
+        }
+
+        let requests = CounterVec::with_label_set(RequestLabelSet {
+            code: StaticLabelSet::new(),
+            method: StaticLabelSet::new(),
+        });
+
+        let labels = RequestLabels {
+            method: Method::Post,
+            code: StatusCode::Ok,
+        };
+        requests.inc_by(labels, 1027);
+
+        let labels = RequestLabels {
+            method: Method::Get,
+            code: StatusCode::BadRequest,
+        };
+        requests.inc_by(labels, 3);
+
+        let mut encoder = BufferedTextEncoder::default();
+
+        let name = MetricName::from_str("http_request").with_suffix(Total);
+        encoder
+            .write_help(&name, "The total number of HTTP requests.")
+            .unwrap();
+        requests.collect_family_into(name, &mut encoder).unwrap();
+
+        let s = String::from_utf8(encoder.finish().to_vec()).unwrap();
+        assert_eq!(
+            s,
+            r#"# HELP http_request_total The total number of HTTP requests.
+# TYPE http_request_total counter
+http_request_total{method="post",code="ok"} 1027
+http_request_total{method="get",code="badrequest"} 3
+"#
+        );
+    }
 }
