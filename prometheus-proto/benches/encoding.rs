@@ -73,7 +73,7 @@ fn prometheus_client<const N: usize>(bencher: Bencher) {
     use prometheus_client::metrics::counter::Counter;
     use prometheus_client::metrics::family::Family;
     use prometheus_client::registry::Registry;
-    use prost11::Message;
+    use prost::Message;
 
     let mut registry = <Registry>::default();
 
@@ -93,8 +93,7 @@ fn prometheus_client<const N: usize>(bencher: Bencher) {
         enc.clear();
         prometheus_client::encoding::protobuf::encode(&registry)
             .unwrap()
-            .encode(&mut enc)
-            .unwrap();
+            .encode_raw(&mut enc);
         black_box(&enc);
     });
 }
